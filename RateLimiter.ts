@@ -1,3 +1,5 @@
+import Redis = require("ioredis");
+
 interface config {
     numberOfRequests:number,
     interval: number,
@@ -32,17 +34,45 @@ class RateLimiter{
     }
 
     //this function is always called whenever a request is made
-    step(key){
-        //Get data from keyMap using key:sec/min/hour number
-        //if the results is less than this.configObject.numberOfRequests goto * otherwise goto +
-        //+ Show Error Message and exit
+    async step(key){
+        const redis = new Redis()
 
-        //* MULTI - represents a redis transaction
-        // INCR key:resolution
-        // EXPIRE key:resolution slotNo * interval
-        // End
+        let currentSlot
+        let expireIntervalInSeconds
 
-        //api responses
+        let date = new Date()
+        if(this.configObject.resolution  === 's'){
+            currentSlot = Math.ceil((date.getSeconds() + 1)/this.configObject.interval)
+            expireIntervalInSeconds = this.configObject.interval
+
+        }
+        if(this.configObject.resolution  === 'm'){
+            currentSlot = Math.ceil((date.getMinutes() + 1)/this.configObject.interval)
+            expireIntervalInSeconds = this.configObject.interval * 60
+
+
+        }
+        if(this.configObject.resolution  === 'h'){
+            currentSlot = Math.ceil((date.getHours() + 1)/this.configObject.interval)
+            expireIntervalInSeconds = this.configObject.interval * 60 * 60
+
+        }
+
+        key = key + ':' + currentSlot
+        let request = await redis.get(key)
+
+        if(request === null || request < this.configObject.numberOfRequests){
+
+            redis
+                .multi()
+                .incr(key)
+                .expire(key,expireIntervalInSeconds)
+                .exec()
+
+            return true //200
+        }else{
+            return false //404
+        }
 
     }
 
