@@ -1,9 +1,8 @@
-import Redis = require("ioredis");
 import Queue from "./Queue";
+import Redis = require("ioredis");
 import {config,request} from "./index";
 
-class RateLimiter{
-
+class Throttler{
     keyMap:Object;
     noSlots:number;
     configObject:config;
@@ -11,16 +10,21 @@ class RateLimiter{
 
 
     constructor(configObject:config,noSlots) {
-        this.keyMap = {};
+        this.keyMap = {}
+        this.queue = new Queue<request>()
         this.configObject = configObject
-        this.noSlots = noSlots;
-
+        this.noSlots = noSlots
     }
 
-    //this function is always called whenever a request is made
-    async step(key){
-
+    async step(request: request){
         const redis = new Redis()
+
+        // as this is being triggered explicitly
+        // hence a request may remain queued indefinitely if a new request
+        // doesn't come in. Add a timer function to make sure that the request
+        // is dequeued automatically
+        let temp:request = request
+        request = this.queue.peek() ? this.queue.peek() : temp
 
         let currentSlot
         let expireIntervalInSeconds
@@ -43,24 +47,30 @@ class RateLimiter{
 
         }
 
-        key = key + ':' + currentSlot
-        let request = await redis.get(key)
+        request.key = request.key + ':' + currentSlot
+        let value = await redis.get(request.key)
 
-        if(request === null || request < this.configObject.numberOfRequests){
+        if(value === null || value < this.configObject.numberOfRequests){
 
             redis
                 .multi()
-                .incr(key)
-                .expire(key,expireIntervalInSeconds)
+                .incr(request.key)
+                .expire(request.key,expireIntervalInSeconds)
                 .exec()
 
+            if (temp !== request){
+                this.queue.dequeue()
+                this.queue.enqueue(temp)
+            }
             return true //200
         }else{
+            this.queue.enqueue(temp)
             return false //404
         }
-
     }
+
 
 }
 
-export  default RateLimiter;
+
+export default Queue;
