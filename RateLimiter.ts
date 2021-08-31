@@ -1,19 +1,19 @@
 import Redis = require("ioredis");
-import Queue from "./Queue";
-import {config,request} from "./index";
+import {config} from "./index";
 
 class RateLimiter{
 
     keyMap:Object;
     noSlots:number;
     configObject:config;
-    queue:Queue<request>;
+    redis:any;
 
 
-    constructor(configObject:config,noSlots) {
+    constructor(configObject:config,noSlots,redis) {
         this.keyMap = {};
         this.configObject = configObject
         this.noSlots = noSlots;
+        this.redis = redis;
 
     }
 
@@ -44,19 +44,33 @@ class RateLimiter{
         }
 
         key = key + ':' + currentSlot
-        let request = await redis.get(key)
 
-        if(request === null || request < this.configObject.numberOfRequests){
+        if(this.redis){
+            let request = await redis.get(key)
 
-            redis
-                .multi()
-                .incr(key)
-                .expire(key,expireIntervalInSeconds)
-                .exec()
+            if(request === null || request < this.configObject.numberOfRequests){
 
-            return true //200
+                this.redis.
+                multi()
+                    .incr(key)
+                    .expire(key,expireIntervalInSeconds)
+                    .exec()
+
+                return true //200
+            }else{
+                return false //404
+            }
         }else{
-            return false //404
+            if(this.keyMap.hasOwnProperty(key) && (this.keyMap[key] < this.configObject.numberOfRequests)){
+                this.keyMap[key] = this.keyMap[key] + 1
+            }else{
+                this.keyMap[key] = 1
+            }
+
+            //need to make sure that there is only one expiry callback per key
+            setTimeout(()=>{
+                delete this.keyMap[key];
+            },expireIntervalInSeconds*1000)
         }
 
     }

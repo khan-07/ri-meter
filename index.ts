@@ -13,7 +13,7 @@ export interface request {
     url:string,
 }
 
-module.exports.rimeter = function (config:config){
+module.exports.rimeter = function (config:config,redis){
 
    let noSlots ;
     if (config.resolution === 's'){
@@ -36,6 +36,6 @@ module.exports.rimeter = function (config:config){
     if(this.mode === "throttle"){
         return new Throttler(config,noSlots)
     }else{
-        return new RateLimiter(config,noSlots)
+        return new RateLimiter(config,noSlots,redis)
     }
 }
