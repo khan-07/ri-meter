@@ -13,6 +13,6 @@
     "ioredis": "^4.27.8"
   },
   "devDependencies": {
-    "@types/node": "^16.7.4"
+    "@types/node": "^16.18.40"
   }
 }
