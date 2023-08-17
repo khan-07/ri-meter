@@ -16,14 +16,6 @@
  *    3) If no, the request is rejected.
  */
 
-interface RateLimiter<K, V> {
-    getValue(key: K): number,
-    setValue(key: K, value: V): boolean,
-    setTimer(timeInMillisecond: number, callback: Function): number
-}
-
-type TokenBucketError = "Refusing Request"
-
 export class TokenBucket<T> {
     private max: number;
     private rateLimiter: RateLimiter<T, number>;
