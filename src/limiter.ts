@@ -12,16 +12,23 @@ enum RateLimitingAlgorithm {
 import { TokenBucket } from "./tokenbucket";
 export class Limiter<T> {
     private algorithim: RateLimitingAlgorithm.TOKEN_BUCKET
-    private rateLimiter: RateLimiter<T, number>
+    private rateLimiter: TokenBucket<T>
+    private storage: RateLimiter<T, number>
+    //Change the following to support multiple keys
+    private key: string;
 
     constructor(rateLimiter: RateLimiter<T,number>, max: number, algorithim?: RateLimitingAlgorithm){
         this.algorithim = algorithim ? algorithim: this.algorithim
-        this.rateLimiter = rateLimiter
+        this.storage = rateLimiter
         if (algorithim === RateLimitingAlgorithm.TOKEN_BUCKET){
             //this 
-            new TokenBucket(max, rateLimiter)
+            this.rateLimiter = new TokenBucket(max, this.storage)
         }
     }
 
+    //for now implementation assumes express but we can handle this later
+    public async handle(req: any, res:any, next: Function){
+        await this.rateLimiter.step(req[this.key])
+    }
     
 }

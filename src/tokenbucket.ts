@@ -25,7 +25,7 @@ export class TokenBucket<T> {
         this.rateLimiter = rateLimiter
     }
 
-    async step(key: T, callback: Function): Promise<TokenBucketError | true> {
+    async step(key: T): Promise<TokenBucketError | true> {
         return new Promise((resolve, reject) => {
             if (this.rateLimiter.getValue(key) >= this.max) {
                 //refuse request 

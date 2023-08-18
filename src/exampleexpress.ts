@@ -32,4 +32,4 @@ const app = {
 
 const inMemoryStorage = new MyInMemoryStorage()
 const inMemoryRateLimiter = new Limiter(inMemoryStorage, 10)
-app.use("/",inMemoryRateLimiter)
+app.use("/",inMemoryRateLimiter.handle)
