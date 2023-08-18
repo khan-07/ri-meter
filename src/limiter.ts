@@ -9,7 +9,7 @@ enum RateLimitingAlgorithm {
     This class will only call the step function of whatever alogirthm was provided
     as an option 
 */
-import { TokenBucket } from "./tokenbucket";
+import { TokenBucket } from "./tokenbucket.js";
 export class Limiter<T> {
     private algorithim: RateLimitingAlgorithm.TOKEN_BUCKET
     private rateLimiter: TokenBucket<T>
