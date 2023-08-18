@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+       "allowJs": true,
+       "module": "ESNext",
+       "moduleResolution": "node16", // resolve package names same as Node
+       "esModuleInterop": true,
+       "resolveJsonModule": true,
+       "allowSyntheticDefaultImports": true, // allow `import A from 'a' even if package 'a' doesn't have a default export`
+       "target": "ESNext",
+       // "noImplicitAny": true, // all types need to be properly inferred or declared
+       "noImplicitReturns": true, // ensure all code paths return values
+       "noUnusedLocals": true, // report errors for unused variables
+       "skipLibCheck": true, // don't check `.d.ts` files
+       // "strict": true, // enable strict mode for the best possible type checking
+       "baseUrl": ".", // where to resolve files relative to
+       "outDir": "_dist",
+       "rootDir": ".",
+       "types": [
+          "node",
+       ],
+       "paths": {
+       }
+    },
+    "include": [
+       "./**/*",
+    ],
+    "exclude": [
+       "./_dist/**/*"
+    ]
+ }
